@@ -1,0 +1,66 @@
+					 SSH Configuration for GitHub and Azure DevOps
+
+
+Step 1: Generate SSH Key for the User
+
+ 		ssh-keygen -t rsa -b 4096 -C "yourofficeemail.com"
+
+Step 2: Copy the Public SSH Key to the Repository
+
+		cat ~/.ssh/id_rsa.pub
+
+Step 3: Create the SSH Configuration File
+		
+		touch ~/.ssh/config
+
+Step 4: Add Configuration to the SSH Config File
+
+# GitHub Configuration
+		Host github.com
+		  HostName github.com
+		  User git
+		  IdentityFile ~/.ssh/id_rsa
+		  IdentitiesOnly yes
+		  StrictHostKeyChecking accept-new
+
+# Azure DevOps Configuration
+
+# Azure DevOps Configuration
+		Host dev.azure.com
+		  HostName <your_organization>.ssh.dev.azure.com
+		  User git
+		  IdentityFile ~/.ssh/id_rsa
+		  IdentitiesOnly yes
+		  StrictHostKeyChecking accept-new
+
+Step 5: Validate the SSH Configuration
+
+For GitHub:
+		ssh -T git@github.com
+
+output:
+	Hi username! You've successfully authenticated, but GitHub does not provide shell access.
+
+
+For Azure DevOps:
+		ssh -T git@dev.azure.com
+
+Step 6: Set Correct Permissions for SSH Keys
+		
+		chmod 700 ~/.ssh
+		chmod 600 ~/.ssh/id_rsa
+		chmod 600 ~/.ssh/id_rsa.pub
+
+Step 7: Set Up Git for Pull and Push Operations
+
+		git config --global user.email "yourofficeemail.com"
+		git config --global user.name "Your Account Name"
+
+
+Note: Changing from HTTPS to SSH URL
+
+	If you've cloned a repository using HTTPS and want to switch to using SSH, run the following command in your repository directory:
+
+	cd /path/to/repo
+	# SSH URL: git@github.com:<owner>/<repo>.git
+	git remote set-url origin git@github.com:<owner>/<repo>.git

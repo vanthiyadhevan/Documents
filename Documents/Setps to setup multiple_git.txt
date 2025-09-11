@@ -1,0 +1,35 @@
+Setps to setup multiple github account in a machine
+
+
+step 1) Create ssh kye with your github mail with below command
+
+ ==> ssh-keygen -t ed25519 -C "yourmail@gmail.com"  -f ~/.ssh/id_ed25519
+
+step 2) add it to ssh-agent
+ 
+ ==> eval "$(ssh-agent -s)"
+ ==> ssh-add ~/.ssh/id_ed25519
+ 
+step 3) Add the public key to the new GitHub in 
+
+step 4) Edit your ~/.ssh/config
+
+# Old account
+Host github-old
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519_old
+
+# New account
+Host github-new
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519_new
+
+
+Sanity checks / troubleshooting
+
+ssh -T git@github-old
+
+
+
