@@ -1,0 +1,93 @@
+இங்கே **Terraform code writer**-க்கு **pro-level tips** — தமிழ் விளக்கம், ஆனால் **technical words English-லேயே**:
+
+## 1) Structure & Module Design (சரியான கட்டமைப்பு)
+
+* **One responsibility per module**: ஒரு module ஒரு domain-ஐ மட்டும் handle பண்ணட்டும் (ex: `vpc`, `eks`, `rds`).
+* **Module interface clean**: `variables.tf`-ல inputs minimal + meaningful; `outputs.tf`-ல only required outputs.
+* **Avoid tight coupling**: module-to-module dependency அதிகமாகாதபடி `outputs` + `data sources` பயன்படுத்துங்க.
+
+## 2) State & Safety (state காப்பாத்துவது pro behavior)
+
+* **Remote backend**: `s3 backend + dynamodb lock` (AWS) / `azurerm backend` / `gcs backend` கட்டாயம்.
+* **State isolation**: `prod`, `staging`, `dev` க்கு தனி backend key / workspace / separate state files.
+* **Never commit secrets**: `terraform.tfstate`, `.tfvars`, `.env` ஆகியவை `.gitignore`-ல் strict.
+
+## 3) Plan Quality (plan predictable ஆக இருக்க)
+
+* **Pin versions**: `required_version` + `required_providers` version constraints.
+* **Provider aliasing**: multi-region / multi-account என்றால் `provider "aws" { alias = "..." }` பயன்படுத்துங்க.
+* **Deterministic naming**: `locals`-ல naming convention define பண்ணி எல்லா resources-க்கும் same pattern.
+
+## 4) Variables & Validation (inputs-ஐ gate பண்ணுங்க)
+
+* **Use type constraints**: `type = object({ ... })`, `list(object(...))` போன்ற strong typing.
+* **Add validation**: `validation { condition = ... error_message = ... }` மூலம் invalid inputs early reject.
+* **Prefer defaults carefully**: default values prod-ல risky ஆகாதபடி safe defaults மட்டும்.
+
+## 5) DRY with locals, for_each, dynamic (copy-paste குறைச்சல்)
+
+* Repeated values க்கு **locals**: tags, naming, CIDRs, common config.
+* Multiple similar resources க்கு **for_each**: `for_each = toset(var.subnets)` போல.
+* Nested blocks க்கு **dynamic blocks**: security rules, ingress/egress patterns.
+
+## 6) Dependencies & Ordering (implicit vs explicit)
+
+* Terraform implicit dependency usually enough (resource attribute reference).
+* **Explicit depends_on** only when needed (ex: IAM policy attach before service create).
+* **Avoid circular dependency**: module outputs ↔ inputs loop வராதபடி design.
+
+## 7) Resource Lifecycle Controls (accidents avoid)
+
+* Critical resources-க்கு:
+
+  * `lifecycle { prevent_destroy = true }` (ex: prod database)
+  * `create_before_destroy = true` (downtime avoid)
+* **ignore_changes** sparingly: drift hide ஆகும்; use only for known external updates.
+
+## 8) Secrets Management (professional-grade)
+
+* Secrets-ஐ `variables`-ல plain text ஆக avoid.
+* Use **Vault**, **AWS Secrets Manager**, **SSM Parameter Store**, **Azure Key Vault** via `data` sources.
+* Output-ல் secrets வந்தா `sensitive = true`.
+
+## 9) Refactoring & Imports (existing infra manage பண்ண)
+
+* Existing resource manage பண்ண வேண்டும்னா **import** (and then align config).
+* Rename/move safe-ஆ இருக்க **moved blocks** (Terraform refactor-friendly).
+
+## 10) CI/CD & Automation (team scale)
+
+* Pipeline steps standard:
+
+  * `terraform fmt -check`
+  * `terraform validate`
+  * `tflint` + `checkov`/`tfsec`
+  * `terraform plan` (PR artifact)
+  * `terraform apply` (approved + protected branch)
+* **Pre-commit hooks**: formatting + linting local-லயே enforce.
+
+## 11) Naming, Tags, Conventions (ops-friendly)
+
+* Mandatory **tags**: `Environment`, `Owner`, `CostCenter`, `ManagedBy=Terraform`, `Service`.
+* Resource names: `project-env-region-component` போன்ற consistent schema.
+
+## 12) Debugging & Troubleshooting (fast diagnosis)
+
+* `TF_LOG=INFO|DEBUG` selectively use; sensitive logs leak ஆகாதபடி கவனம்.
+* `terraform state list/show` மூலம் state reality check.
+* Drift suspicion வந்தா `terraform plan` + provider read errors check.
+
+## 13) Performance & Large Codebases
+
+* Large graphs-ல module boundaries clear.
+* Use `-target` only for emergency (normal flow-க்கு anti-pattern).
+* Data sources heavy-ஆ இருந்தா caching/avoid unnecessary reads.
+
+## 14) Team Collaboration Best Practices
+
+* PR-ல **plan output** attach பண்ணுங்க.
+* “Why” document: module README-ல் inputs/outputs + examples.
+* Version modules: Git tag / registry versioning.
+
+---
+
